@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Generic training script that trains a SSD model using a given dataset."""
 from mobilenet_v1 import mobilenet_v1
 
 import numpy as np
@@ -13,8 +14,6 @@ import sys
 def main(args):
 
     input_files = [os.path.join(args.train_dir,f) for f in os.listdir(args.train_dir)]
-
-
 
     # build network
     inputs = tf.placeholder(tf.float32,shape=[None,None,None,3])
