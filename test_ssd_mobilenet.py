@@ -28,15 +28,45 @@ def main():
         # set placeholder
         inputs = tf.placeholder(tf.float32,[None,IMAGE_SIZE,IMAGE_SIZE,3])
 
-        # build model
-        ssdnet = ssd.SSDnet()
-        res = ssdnet.net(inputs)
-        predictions = res[0]
-        localisations = res[1]
-        logits = res[2] 
-        end_points = res[3]
-        mobilenet_var_list = res[4]
-        ssdnet.anchors(img_shape=(IMAGE_SIZE,IMAGE_SIZE))
+        # get the SSD network and its anchors.
+        ssd_net = ssd.SSD_net()
+        predictions,localisations,logits,end_points =  \
+                    ssd_net.net(inputs,is_training=False)
+
+        # get its anchors.
+        ssd_anchors = ssd_net.anchors(img_shape=(IMAGE_SIZE,IMAGE_SIZE))
+
+        # add loss functions.
+        ssd_net.losses(logits,localisations,b_gclasses,b_glocalisations,b_gscores)
+
+        # detected objects from SSD output
+        localisations = ssd_net.bboxes_decode(localisations,ssd_anchors)
+        rscores,rbboxes = \
+            ssd_net.detected_bboxes(predictions,localisations,
+                    select_threshold=0.01,
+                    nms_threshold=0.45,
+                    clipping_bbox=None,
+                    top_k=400,
+                    keep_top_k=200)
+
+        # compute TP and FP statistics.
+        num_gbboxes,tp,fp,rscores = \
+            bboxes_matching_batch(rscores.keys(),rscores,rbboxes,
+                b_glabels,b_gbboxes,b_gdifficults,
+                matching_threshold=0.5)
+
+
+        # evaluation metrics
+        with tf.device("/device:CPU:0"):
+            dict_metrics = {}
+            # add all losses
+            for loss in tf.get_collection(tf.GraphKeys.LOSSES):
+                dict_metrics[loss.op.name] = slim.metrics.streaming_mean(loss)
+            # extra losses
+            for loss in tf.get_collection("EXTRA_LOSSES"):
+                dict_metrics[loss.op.name] = slim.metrics.streaming_mean(loss)
+
+
 
         # print("*" * 30)
         # print("var list \n")
