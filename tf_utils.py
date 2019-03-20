@@ -15,6 +15,8 @@
 """Diverse TensorFlow utils, for training, evaluation and so on!
 """
 import os
+import pdb
+
 from pprint import pprint
 
 import tensorflow as tf
@@ -182,58 +184,35 @@ def add_variables_summaries(learning_rate):
 def update_model_scope(var, ckpt_scope, new_scope):
     return var.op.name.replace(new_scope,'vgg_16')
 
-
-def get_init_fn(flags):
-    """Returns a function run by the chief worker to warm-start the training.
+def get_init_fn(FLAGS,variables_to_restore):
+    """ Returns a function run by the chief worker to warm-start the training.
     Note that the init_fn is only run when initializing the model during the very
     first global step.
-
-    Returns:
-      An init function run by the supervisor.
+    Adapted to load weights from the pretrained mobilenet V1 with the input
+    `variables_to_restore`.
     """
-    if flags.checkpoint_path is None:
+    if FLAGS.checkpoint_path is None:
         return None
-    # Warn the user if a checkpoint exists in the train_dir. Then ignore.
-    if tf.train.latest_checkpoint(flags.train_dir):
+    
+    # Warn the user if a checkpoint exists in the train_dir. Then we'll be
+    # ignoring the checkpoint anyway.
+    if tf.train.latest_checkpoint(FLAGS.train_dir):
         tf.logging.info(
-            'Ignoring --checkpoint_path because a checkpoint already exists in %s'
-            % flags.train_dir)
+            'Ignoring --checkpoint_path because a checkpoint already exists ' +
+            'in %s' % FLAGS.train_dir)
         return None
-
-    exclusions = []
-    if flags.checkpoint_exclude_scopes:
-        exclusions = [scope.strip()
-                      for scope in flags.checkpoint_exclude_scopes.split(',')]
-
-    # TODO(sguada) variables.filter_variables()
-    variables_to_restore = []
-    for var in slim.get_model_variables():
-        excluded = False
-        for exclusion in exclusions:
-            if var.op.name.startswith(exclusion):
-                excluded = True
-                break
-        if not excluded:
-            variables_to_restore.append(var)
-    # Change model scope if necessary.
-    if flags.checkpoint_model_scope is not None:
-        variables_to_restore = \
-            {var.op.name.replace(flags.model_name,
-                                 flags.checkpoint_model_scope): var
-             for var in variables_to_restore}
-
-
-    if tf.gfile.IsDirectory(flags.checkpoint_path):
-        checkpoint_path = tf.train.latest_checkpoint(flags.checkpoint_path)
+    
+    if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
+        checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
     else:
-        checkpoint_path = flags.checkpoint_path
-    tf.logging.info('Fine-tuning from %s. Ignoring missing vars: %s' % (checkpoint_path, flags.ignore_missing_vars))
+        checkpoint_path = FLAGS.checkpoint_path
 
+    tf.logging.info('Fine-tuning from %s' % checkpoint_path)
+    # pdb.set_trace()
     return slim.assign_from_checkpoint_fn(
         checkpoint_path,
         variables_to_restore,
-        ignore_missing_vars=flags.ignore_missing_vars)
-
+        ignore_missing_vars=FLAGS.ignore_missing_vars)
 
 def get_variables_to_train(flags):
     """Returns a list of variables to train.
@@ -251,8 +230,3 @@ def get_variables_to_train(flags):
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
         variables_to_train.extend(variables)
     return variables_to_train
-
-
-# =========================================================================== #
-# Evaluation utils.
-# =========================================================================== #

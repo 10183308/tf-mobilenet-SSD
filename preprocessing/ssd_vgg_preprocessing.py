@@ -23,7 +23,6 @@ import tf_extended as tfe
 from tensorflow.python.ops import control_flow_ops
 
 from preprocessing import tf_image
-from nets import ssd_common
 
 slim = tf.contrib.slim
 
@@ -260,11 +259,6 @@ def preprocess_for_train(image, labels, bboxes,
         if image.dtype != tf.float32:
             image = tf.image.convert_image_dtype(image, dtype=tf.float32)
         tf_summary_image(image, bboxes, 'image_with_bboxes')
-
-        # # Remove DontCare labels.
-        # labels, bboxes = ssd_common.tf_bboxes_filter_labels(out_label,
-        #                                                     labels,
-        #                                                     bboxes)
 
         # Distort image and bounding boxes.
         dst_image = image
