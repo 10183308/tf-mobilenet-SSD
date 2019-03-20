@@ -135,6 +135,7 @@ def main(_):
         with tf.device("/cpu:0"):
             global_step = tf.train.create_global_step()
 
+        # pdb.set_trace()
         # get the ssd network and its anchors
         ssd_cls = ssd.SSDnet
         ssd_params = ssd_cls.default_params._replace(num_classes=FLAGS.num_classes)
@@ -279,20 +280,45 @@ def main(_):
             write_version=2,
             pad_step_number=False)
 
-        slim.learning.train(
-            train_tensor,
-            logdir=FLAGS.train_dir,
-            master="",
-            is_chief=True,
-            init_fn =tf_utils.get_init_fn(FLAGS,mobilenet_var_list),
+        # create initial assignment op
+        init_assign_op,init_feed_dict = slim.assign_from_checkpoint(
+            FLAGS.checkpoint_path,mobilenet_var_list,
+            ignore_missing_vars=FLAGS.ignore_missing_vars)
+        
+
+        # create an initial assignment function
+        for k,v in init_feed_dict.items():
+            if "global_step" in k.name:
+                g_step = k
+
+        init_feed_dict[g_step] = 0 # change the global_step to zero.
+        init_fn = lambda sess: sess.run(init_assign_op,init_feed_dict)
+
+        # run training
+        slim.learning.train(train_tensor,logdir=FLAGS.train_dir,
+            init_fn=init_fn,
             summary_op=summary_op,
             number_of_steps=FLAGS.max_number_of_steps,
-            log_every_n_steps=FLAGS.log_every_n_steps,
             save_summaries_secs=FLAGS.save_summaries_secs,
-            saver=saver,
-            save_interval_secs =FLAGS.save_interval_secs,
+            save_interval_secs=FLAGS.save_interval_secs,
             session_config=config,
-            sync_optimizer=None)
+            saver=saver,
+            )
+
+
+        # slim.learning.train(
+        #     train_tensor,
+        #     logdir=FLAGS.train_dir,
+        #     init_fn =tf_utils.get_init_fn(FLAGS,mobilenet_var_list),
+        #     summary_op=summary_op,
+        #     global_step=global_step,
+        #     number_of_steps=FLAGS.max_number_of_steps,
+        #     log_every_n_steps=FLAGS.log_every_n_steps,
+        #     save_summaries_secs=FLAGS.save_summaries_secs,
+        #     saver=saver,
+        #     save_interval_secs =FLAGS.save_interval_secs,
+        #     session_config=config,
+        #     sync_optimizer=None)
 
 if __name__ == '__main__':
     tf.app.run()

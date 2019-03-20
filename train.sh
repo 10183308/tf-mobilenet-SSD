@@ -4,7 +4,7 @@ python3 train_ssd_mobilenet.py \
 --dataset_name=pascalvoc_2007 \
 --dataset_split_name=train \
 --dataset_dir=./tf_records \
---batch_size=32 \
+--batch_size=1 \
 --max_number_of_steps=100 \
 --gpu_memory_fraction=0.1 \
 --train_on_cpu=True
