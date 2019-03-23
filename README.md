@@ -23,7 +23,7 @@ Place the **VOC2007** datasets as
 >
 > ​    -- test
 
-where the downloaded
+where the downloaded voc_07_trainval and voc_07_test are unzip under the**./VOC2007/train** and **./VOC2007/test **respectively.
 
 then run `sh convert_train_dataset.sh` to convert the raw images datasets into tf_records file under the directory **./tf_records** .
 
