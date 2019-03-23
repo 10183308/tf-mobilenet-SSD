@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_integer(
     'save_interval_secs', 600,
     'The frequency with which the model is saved, in seconds.')
 tf.app.flags.DEFINE_float(
-    'gpu_memory_fraction', 0.1, 'GPU memory fraction to use.')
+    'gpu_memory_fraction', 0.5, 'GPU memory fraction to use.')
 
 # learning rate flags.
 tf.app.flags.DEFINE_string(
@@ -112,13 +112,20 @@ tf.app.flags.DEFINE_boolean(
 tf.app.flags.DEFINE_boolean(
     'train_on_cpu', False,
 'Set as `True` will make use of CPU for training.')
+tf.app.flags.DEFINE_string(
+    "gpu_device","0",
+"Set used gpu id for training.")
+tf.app.flags.DEFINE_boolean("allow_growth",True,
+"If allow increasing use of memory of GPU.")
 
 
 FLAGS = tf.app.flags.FLAGS
 
 def main(_):
     if FLAGS.train_on_cpu:
-        os.environ["CUDA_VISIBLE_DEVICES"]="-1"    
+        os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"]=FLAGS.gpu_device
 
     if not FLAGS.dataset_dir:
         raise ValueError("You must supply the dataset directory with --dataset-dir.")
@@ -272,7 +279,7 @@ def main(_):
         summary_op = tf.summary.merge(list(summaries),name="summary_op")
 
         # start training
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction,allow_growth=FLAGS.allow_growth)
         config = tf.ConfigProto(log_device_placement=False,
                                 gpu_options=gpu_options)
         saver = tf.train.Saver(max_to_keep=2,

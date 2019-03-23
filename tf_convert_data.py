@@ -25,7 +25,6 @@ python tf_convert_data.py \
 ```
 """
 import tensorflow as tf
-
 from datasets import pascalvoc_to_tfrecords
 
 FLAGS = tf.app.flags.FLAGS
