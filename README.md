@@ -41,7 +41,7 @@ Please run `sh eval.sh` for evaluation,
 
 make sure you have modified test dataset path in the **convert_train_dataset.sh** and 
 
-use `sh convert_train_dataset.sh to prepare test tf_records in advance.`
+use `sh convert_train_dataset.sh` to prepare test tf_records in advance.
 
 
 
