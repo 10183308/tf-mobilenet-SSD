@@ -1,15 +1,47 @@
 # tf-mobilenet-SSD
-## 1. Prepare tf_records data for training
 
-First place **VOC2007** on root path,
+## 0. Acknowledgement
 
-then run `sh convert_train_dataset.sh`
+This repo is higly inspired by [SSD-Tensorflow](https://github.com/balancap/SSD-Tensorflow) thanks to [@Paul Balanca](https://github.com/balancap)'s excellent work!
+
+
+
+## 1. Prepare tf_records for training
+
+Please download the **VOC2007** datasets from
+
+- [PASCAL VOC 2007 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar)
+- [PASCAL VOC 2007 test](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar)
+
+
+
+Place the **VOC2007** datasets as
+
+> \- VOC2007
+>
+> ​    -- train
+>
+> ​    -- test
+
+where the downloaded
+
+then run `sh convert_train_dataset.sh` to convert the raw images datasets into tf_records file under the directory **./tf_records** .
 
 ## 2. Run training
 
-run `sh train.sh` for training
+The pretrained **Mobilenet-V1-224** checkpoint is under the **./ckpt**
+
+Please run `sh train.sh` for training, the checkpoints are saved
+
+under **./logs**
 
 ## 3. Run evaluation
 
-run `sh eval.sh` for evaluation
+Please run `sh eval.sh` for evaluation, 
+
+make sure you have modified test dataset path in the **convert_train_dataset.sh** and 
+
+use `sh convert_train_dataset.sh to prepare test tf_records in advance.`
+
+
 
